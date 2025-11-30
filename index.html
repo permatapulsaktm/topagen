@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Top Agen & Produk</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .tab-btn.active {
+            background-color: white;
+            color: #667eea;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="gradient-bg text-white py-8 px-4 shadow-lg">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-4xl font-bold mb-2">📊 Dashboard Top Agen Permata Pulsa</h1>
+            <p class="text-purple-100">Monitoring Transaksi Real-time</p>
+            
+            <!-- Navigation Tabs -->
+            <div class="mt-6 mb-4 flex items-center gap-4 flex-wrap">
+                <div class="flex gap-2">
+                    <button onclick="switchTab('agen')" id="btnAgen" class="tab-btn active bg-white text-purple-600 px-6 py-2 rounded-lg font-semibold transition-all shadow-md">
+                        👥 Top Agen
+                    </button>
+                    <button onclick="switchTab('produk')" id="btnProduk" class="tab-btn bg-white bg-opacity-20 hover:bg-opacity-30 px-6 py-2 rounded-lg font-semibold transition-all">
+                        📦 Top Produk
+                    </button>
+                </div>
+                <div class="flex-1"></div>
+                <div id="serverTime" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg backdrop-blur-sm">
+                    <span class="text-sm">🕐 Waktu Server (WIB): <span class="font-semibold" id="timeDisplay">--</span></span>
+                </div>
+                <div id="localTime" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg backdrop-blur-sm">
+                    <span class="text-sm">📍 Waktu Lokal (WITA): <span class="font-semibold" id="localTimeDisplay">--</span></span>
+                </div>
+                <button onclick="loadData()" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg backdrop-blur-sm transition-all">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Statistics Cards for Agen -->
+        <div id="statsSection" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 card-hover fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Total Agen Aktif</p>
+                        <p id="totalAgen" class="text-3xl font-bold text-green-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <span class="text-3xl">👥</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 card-hover fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Total Transaksi</p>
+                        <p id="totalTransaksi" class="text-3xl font-bold text-blue-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <span class="text-3xl">📈</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 card-hover fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Status Tetap</p>
+                        <p id="statusTetap" class="text-3xl font-bold text-purple-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <span class="text-3xl">✅</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 card-hover fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Perlu Review</p>
+                        <p id="needReview" class="text-3xl font-bold text-orange-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-full">
+                        <span class="text-3xl">⚠️</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards for Produk -->
+        <div id="statsSectionProduk" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 card-hover fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Total Produk Aktif</p>
+                        <p id="totalProduk" class="text-3xl font-bold text-green-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <span class="text-3xl">📦</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 card-hover fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Total Transaksi</p>
+                        <p id="totalTransaksiProduk" class="text-3xl font-bold text-blue-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <span class="text-3xl">📈</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 card-hover fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Total Agen</p>
+                        <p id="totalAgenProduk" class="text-3xl font-bold text-purple-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <span class="text-3xl">👥</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 card-hover fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Avg TRX/Produk</p>
+                        <p id="avgTrxProduk" class="text-3xl font-bold text-orange-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-full">
+                        <span class="text-3xl">📊</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table for Agen -->
+        <div id="tableSection" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-800">🏆 Top Performing Agen</h2>
+                    <div class="relative w-64">
+                        <input 
+                            type="text" 
+                            id="searchAgen" 
+                            placeholder="Cari agen..." 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rank</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Agen</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Count Agen</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-200">
+                        <!-- Data akan dimuat di sini -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Data Table for Produk -->
+        <div id="tableSectionProduk" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-800">📦 Top Produk Terlaris</h2>
+                    <div class="relative w-64">
+                        <input 
+                            type="text" 
+                            id="searchProduk" 
+                            placeholder="Cari produk atau agen..." 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rank</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Produk</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Count Produk</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Persentase</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Agen</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">TRX</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Persen TRX</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBodyProduk" class="divide-y divide-gray-200">
+                        <!-- Data akan dimuat di sini -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <p class="mt-4 text-gray-600">Memuat data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden text-center py-12">
+            <span class="text-6xl">❌</span>
+            <h3 class="mt-4 text-xl font-semibold text-gray-700">Terjadi Kesalahan</h3>
+            <p id="errorMessage" class="mt-2 text-gray-500"></p>
+            <button onclick="loadData()" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-all">
+                🔄 Coba Lagi
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'agen';
+        let cachedData = null;
+
+        function searchTable(type) {
+            const searchInput = type === 'agen' ? 
+                document.getElementById('searchAgen').value.toLowerCase() : 
+                document.getElementById('searchProduk').value.toLowerCase();
+            
+            const tableBody = type === 'agen' ? 
+                document.getElementById('tableBody') : 
+                document.getElementById('tableBodyProduk');
+            
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+                
+                if (text.includes(searchInput)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update button styles
+            document.getElementById('btnAgen').className = 'tab-btn ' + 
+                (tab === 'agen' ? 'active bg-white text-purple-600 shadow-md' : 'bg-white bg-opacity-20 hover:bg-opacity-30') + 
+                ' px-6 py-2 rounded-lg font-semibold transition-all';
+            document.getElementById('btnProduk').className = 'tab-btn ' + 
+                (tab === 'produk' ? 'active bg-white text-purple-600 shadow-md' : 'bg-white bg-opacity-20 hover:bg-opacity-30') + 
+                ' px-6 py-2 rounded-lg font-semibold transition-all';
+
+            // Show/hide sections
+            if (tab === 'agen') {
+                document.getElementById('statsSection').classList.remove('hidden');
+                document.getElementById('tableSection').classList.remove('hidden');
+                document.getElementById('statsSectionProduk').classList.add('hidden');
+                document.getElementById('tableSectionProduk').classList.add('hidden');
+            } else {
+                document.getElementById('statsSection').classList.add('hidden');
+                document.getElementById('tableSection').classList.add('hidden');
+                document.getElementById('statsSectionProduk').classList.remove('hidden');
+                document.getElementById('tableSectionProduk').classList.remove('hidden');
+            }
+
+            // Render data if already loaded
+            if (cachedData) {
+                if (tab === 'agen') {
+                    renderAgenData(cachedData);
+                } else {
+                    renderProdukData(cachedData);
+                }
+            }
+        }
+
+        function getStatusBadge(status) {
+            const statusStr = status.toString();
+            const statusLower = statusStr.toLowerCase();
+            
+            // Remove emoji and get clean status text
+            const cleanStatus = statusStr.replace(/[^\w\s]/gi, '').trim().toLowerCase();
+            
+            if (cleanStatus.includes('tetap') || statusLower.includes('tetap')) {
+                return '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">✅ Tetap</span>';
+            } else if (cleanStatus.includes('turun') || statusLower.includes('turun')) {
+                return '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">⚠️ Turun</span>';
+            } else if (cleanStatus.includes('naik') || statusLower.includes('naik')) {
+                return '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">🔴 Naik</span>';
+            } else {
+                return '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">' + statusStr + '</span>';
+            }
+        }
+
+        function getRankBadge(rank) {
+            if (rank === 1) return '🥇';
+            if (rank === 2) return '🥈';
+            if (rank === 3) return '🥉';
+            return '#' + rank;
+        }
+      
+          const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbx4C8wDadLWTXgTzvwHA_J9yWJZrzwtjUOjVsgtrdSJMRKF4QnaM6z3q7eNcIZuhjMGQA/exec';
+          
+          function loadData() {
+              document.getElementById('loadingState').classList.remove('hidden');
+              document.getElementById('errorState').classList.add('hidden');
+              document.getElementById('statsSection').classList.add('hidden');
+              document.getElementById('tableSection').classList.add('hidden');
+              document.getElementById('statsSectionProduk').classList.add('hidden');
+              document.getElementById('tableSectionProduk').classList.add('hidden');
+          
+              fetch(GAS_API_URL + '?action=getData')
+                  .then(response => response.json())
+                  .then(data => onSuccess(data))
+                  .catch(error => onFailure(error));
+          }
+
+        function renderAgenData(result) {
+            // Update times from sheet
+            document.getElementById('timeDisplay').textContent = result.serverTime || '--';
+            document.getElementById('localTimeDisplay').textContent = result.localTime || '--';
+
+            // Update statistics
+            document.getElementById('totalAgen').textContent = result.totalAgen;
+            document.getElementById('totalTransaksi').textContent = result.totalTransaksi.toLocaleString('id-ID');
+            document.getElementById('statusTetap').textContent = result.statusTetap;
+            document.getElementById('needReview').textContent = result.needReview;
+
+            // Populate table
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = result.agents.map(item => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-2xl font-bold">${getRankBadge(item.rank)}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-semibold text-gray-900">${item.agen}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-lg font-bold text-indigo-600">${parseInt(item.count).toLocaleString('id-ID')}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        ${getStatusBadge(item.status)}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function formatPercentage(value) {
+            // Jika sudah string dengan %, return as is
+            if (typeof value === 'string' && value.includes('%')) {
+                return value;
+            }
+            
+            // Jika angka desimal (0.0828), convert ke persen
+            const numValue = parseFloat(value);
+            if (!isNaN(numValue)) {
+                return (numValue * 100).toFixed(2) + '%';
+            }
+            
+            return value || '0%';
+        }
+
+        function renderProdukData(result) {
+            // Update times from sheet
+            document.getElementById('timeDisplay').textContent = result.serverTime || '--';
+            document.getElementById('localTimeDisplay').textContent = result.localTime || '--';
+
+            // Update statistics for Produk
+            document.getElementById('totalProduk').textContent = result.produks.length;
+            
+            const totalTrx = result.produks.reduce((sum, p) => sum + (parseInt(p.trx) || 0), 0);
+            document.getElementById('totalTransaksiProduk').textContent = totalTrx.toLocaleString('id-ID');
+            
+            // Count unique agen
+            const uniqueAgen = new Set(result.produks.map(p => p.agen).filter(a => a)).size;
+            document.getElementById('totalAgenProduk').textContent = uniqueAgen;
+            
+            const avgTrx = result.produks.length > 0 ? Math.round(totalTrx / result.produks.length) : 0;
+            document.getElementById('avgTrxProduk').textContent = avgTrx.toLocaleString('id-ID');
+
+            // Populate table
+            const tableBodyProduk = document.getElementById('tableBodyProduk');
+            tableBodyProduk.innerHTML = result.produks.map(item => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-2xl font-bold">${getRankBadge(item.rank)}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-semibold text-gray-900">${item.produk}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-lg font-bold text-indigo-600">${parseInt(item.count).toLocaleString('id-ID')}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-sm font-semibold text-gray-700">${formatPercentage(item.persen)}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-700">${item.agen || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-sm font-bold text-blue-600">${parseInt(item.trx || 0).toLocaleString('id-ID')}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-sm font-semibold text-gray-700">${formatPercentage(item.persenTrx)}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function onSuccess(result) {
+            if (result.error) {
+                showError(result.error);
+                return;
+            }
+
+            cachedData = result;
+
+            // Render based on current tab
+            if (currentTab === 'agen') {
+                renderAgenData(result);
+                document.getElementById('statsSection').classList.remove('hidden');
+                document.getElementById('tableSection').classList.remove('hidden');
+            } else {
+                renderProdukData(result);
+                document.getElementById('statsSectionProduk').classList.remove('hidden');
+                document.getElementById('tableSectionProduk').classList.remove('hidden');
+            }
+
+            // Hide loading
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+
+        function onFailure(error) {
+            showError('Gagal memuat data: ' + error.message);
+        }
+
+        function showError(message) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Auto-load data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            
+            // Setup search event listeners
+            document.getElementById('searchAgen').addEventListener('input', function() {
+                searchTable('agen');
+            });
+            
+            document.getElementById('searchProduk').addEventListener('input', function() {
+                searchTable('produk');
+            });
+        });
+    </script>
+</body>
+</html>
